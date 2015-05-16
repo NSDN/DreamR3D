@@ -7,7 +7,6 @@ Begin VB.Form Form1主界面
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   15360
-   KeyPreview      =   -1  'True
    LinkTopic       =   "Form1"
    Picture         =   "Form1.frx":0000
    ScaleHeight     =   768
@@ -223,10 +222,12 @@ End Select
 End Function
 Private Sub Form_Activate()
 On Error Resume Next
+已阅读说明 = True
+Dir1.Path = App.Path
+Dir1.Path = App.Path
 读取设置
 切换界面语言 设置(4)
-BG.BGM(0).url = App.Path & "\Audio\BGM\Title.mp3"
-BG.BGM(9).url = App.Path & "\Pic\System\UI\Click0.wav"
+'——公共变量——
 End Sub
 
 Private Sub Lab选项_Click(index As Integer)
@@ -236,21 +237,20 @@ Case 0 '系统未安装楷体字体
   For i = 0 To Lab选项.UBound: Lab选项(i).Font = "宋体": Next
   Lab选项(0).Caption = "已切换宋体字，建议安装完整操作系统"
 Case 1: Unload BG: Unload Me: End
-Case 2: Form2设置界面.Show: Unload Me
+Case 2: Form2设置界面.Show , vbNormalFocus
 Case 3 '多语言切换
 If Lab选项(3).Caption = "English" Then
   切换界面语言 1
 Else
   切换界面语言 0
 End If
-Case 4: Form3制作名单.Show: Unload Me
-Case 5
+Case 4: Form3制作名单豪华版.Show , vbNormalFocus
+Case 5 '生存模式
   BG.BGM(0).url = ""
-  Stage生存.Show: Unload Me
+  Stage生存.Show , vbNormalFocus
 Case 6 '剧情模式
-  MsgBox "剧情模式施工中..."
   BG.BGM(0).url = ""
-  Stage01.Show: Unload Me
+  Stage01.Show , vbNormalFocus
 End Select
 End Sub
 

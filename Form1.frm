@@ -13,7 +13,7 @@ Begin VB.Form Stage生存
    ScaleHeight     =   8970
    ScaleWidth      =   12000
    ShowInTaskbar   =   0   'False
-   StartUpPosition =   3  '窗口缺省
+   StartUpPosition =   2  '屏幕中心
    Begin VB.Timer Timer1 
       Interval        =   1000
       Left            =   360
@@ -86,8 +86,8 @@ Case 1 '===（敌）直线移动===
     物理(2) = 移动速度 * (目标位置.z - 临时坐标(0).z)
     Enemy(对象编号).SetPosition 临时坐标(0).X + 物理(1), 物理计算高度(临时坐标(0), 1, 3) + 12, 临时坐标(0).z + 物理(2)
     临时坐标(1) = Enemy(对象编号).GetPosition
-    If Mesh(0).Collision(Vector(临时坐标(1).X + 4, 临时坐标(1).Y, 临时坐标(1).z), Vector(临时坐标(1).X - 4, 临时坐标(1).Y, 临时坐标(1).z)) Then Enemy(对象编号).SetPosition 临时坐标(1).X - 物理(1), 临时坐标(1).Y, 临时坐标(1).z
-    If Mesh(0).Collision(Vector(临时坐标(1).X, 临时坐标(1).Y, 临时坐标(1).z + 4), Vector(临时坐标(1).X, 临时坐标(1).Y, 临时坐标(1).z - 4)) Then Enemy(对象编号).SetPosition 临时坐标(1).X, 临时坐标(1).Y, 临时坐标(1).z - 物理(2)
+    If Mesh(0).Collision(Vector(临时坐标(1).X + 4, 临时坐标(1).Y, 临时坐标(1).z), Vector(临时坐标(1).X - 4, 临时坐标(1).Y, 临时坐标(1).z)) Then Enemy(对象编号).SetPosition 临时坐标(1).X - 2 * 物理(1), 临时坐标(1).Y, 临时坐标(1).z
+    If Mesh(0).Collision(Vector(临时坐标(1).X, 临时坐标(1).Y, 临时坐标(1).z + 4), Vector(临时坐标(1).X, 临时坐标(1).Y, 临时坐标(1).z - 4)) Then Enemy(对象编号).SetPosition 临时坐标(1).X, 临时坐标(1).Y, 临时坐标(1).z - 2 * 物理(2)
 End Select
 End Function
 Private Function AImove(对象类型 As Long, 对象编号 As Long, 事件类型 As Long, 移动速度 As Single)
@@ -141,8 +141,8 @@ Case 1 '敌人
   Case 1 '==僵尸==
       Select Case EnmState(对象编号)
       Case 0 '——靠近——
-        AImove 1, 对象编号, 1, 999
-        AImove 1, 对象编号, 2, 移动速度
+        AImoveTo 对象编号, 0, Player(0).GetPosition, 999
+        AImoveTo 对象编号, 1, Player(0).GetPosition, 移动速度
         If 距离平方(Player(0).GetPosition, Enemy(对象编号).GetPosition) < 400 Then
           执行动作 1, 对象编号, "ref_shoot_wrench", 游戏速度, False
           If 血污残留时间 <= 20 Then 玩家受伤 0, 难度
@@ -155,8 +155,8 @@ Case 1 '敌人
         End If
       End Select
   Case 2 '==步兵==
-      AImove 1, 对象编号, 2, 0
-      碰撞(0) = Mesh(0).Collision(Enemy(对象编号).GetPosition, Player(0).GetPosition, TV_TESTTYPE_HITBOXES)
+      AImoveTo 对象编号, 1, Player(0).GetPosition, 0
+      碰撞(0) = Mesh(0).Collision(Enemy(对象编号).GetPosition, Player(0).GetPosition)
       If 碰撞(0) = False Then EnmLastView(对象编号) = Vector(CameraPozX + 10 * 物理引擎(3), CameraPozY, CameraPozZ + 10 * 物理引擎(4))
       Select Case EnmState(对象编号)
       Case 0 '——接近玩家——
@@ -177,7 +177,7 @@ Case 1 '敌人
           End If
       Case 1 '——立正射击——
           If 碰撞(0) = False Then
-              AImove 1, 对象编号, 1, 999
+              AImoveTo 对象编号, 0, Player(0).GetPosition, 999
               If 距离平方(Enemy(对象编号).GetPosition, Player(0).GetPosition) < 9000 Then
                 If EnmT(对象编号) Mod 300 < 20 Then '攻击
                     SEplay "掩体着弹0.wav", False
@@ -230,7 +230,9 @@ End Function
 Public Function 玩家受伤(编号 As Long, 伤害 As Long)
 If 编号 = 0 Then
   PlayerHP(0) = PlayerHP(0) - 伤害
+  GF.Flash 1, 0, 0, 500
   If PlayerHeight > 10 Then PlayerHeight = PlayerHeight - 5
+  If 后坐力(1) < 2 Then 后坐力(1) = 后坐力(1) - 6
   血污残留时间 = 80
 Else
 End If
@@ -268,6 +270,7 @@ With Me
   .top = 0
   .Show '显示当前窗口，每次都加上错不了
 End With
+准星X = Me.Width \ 30: 准星Y = Me.Height \ 30
 适配X = Me.Width / 15360: 适配Y = Me.Height / 11520
 Tv.SetSearchDirectory App.Path & "\" '设定贴图读取目录为当前目录
 Tv.SetVSync True '垂直同步开关
@@ -276,6 +279,7 @@ Tv.ShowWinCursor False '隐藏鼠标
 Inp.Initialize '初始化按键检测
 Tv.SetAngleSystem TV_ANGLE_DEGREE
 Scene.SetViewFrustum 45, 1200  '可视范围，可视角度45
+If 设置(2) > 0 Then Scene.SetTextureFilter TV_FILTER_BILINEAR
 '=====路点=====
 '=====贴图=====
 Dim BGname As String: BGname = "nuke"
@@ -303,19 +307,27 @@ Atmos.Fog_SetColor 0.1, 0.1, 0.1                         '颜色RGBA，例如红
 Atmos.Fog_SetParameters 50, 1000, 0              '最近距离，最远距离，浓度
 Atmos.Fog_SetType TV_FOG_LINEAR, TV_FOGTYPE_PIXEL  '雾的类型
 '=====材质=====
-MF.CreateMaterial "solid" '建立名为solid的材质
-MF.SetAmbient GetMat("solid"), 0.1, 0.06, 0.04, 1       '环境光
+MF.CreateMaterial "solid" '建立模型普适材质
+MF.SetAmbient GetMat("solid"), 0.08, 0.04, 0.02, 1       '环境光
 MF.SetDiffuse GetMat("solid"), 1, 1, 1, 1 '扩散光，即物体的固有颜色
-MF.SetEmissive GetMat("solid"), 0, 0, 0, 1  '自发光
+MF.SetEmissive GetMat("solid"), 0, 0, 0, 0 '自发光
 MF.SetOpacity GetMat("solid"), 1  '不透明度
 MF.SetSpecular GetMat("solid"), 0, 0, 0, 0 '高光色
-MF.SetPower GetMat("solid"), 100 '散射强度
+MF.SetPower GetMat("solid"), 60 '散射强度
+
+MF.CreateMaterial "map" '建立地图高光材质
+MF.SetAmbient GetMat("map"), 0.08, 0.04, 0.02, 1       '环境光
+MF.SetDiffuse GetMat("map"), 1, 1, 1, 1 '扩散光，即物体的固有颜色
+MF.SetEmissive GetMat("map"), 0.08, 0.04, 0.02, 1 '自发光
+MF.SetOpacity GetMat("map"), 1  '不透明度
+MF.SetSpecular GetMat("map"), 1, 1, 1, 1 '高光色
+MF.SetPower GetMat("map"), 15 '散射强度
 '=====光影=====
 '光晕
 Atmos.Sun_SetBillboardSize 0.7 '设置太阳贴图大小
 Atmos.Sun_SetPosition -400, 400, -400  '设置太阳位置
 Atmos.Sun_SetTexture GetTex("sun") '赋予太阳贴图
-If 设置(0) > 1 And 设置(4) > 30 Then Atmos.Sun_Enable True '使太阳贴图生效
+If 设置(0) > 1 And 设置(4) >= 30 Then Atmos.Sun_Enable True '使太阳贴图生效
 Atmos.LensFlare_SetLensNumber 4 '光晕层数
 Atmos.LensFlare_SetLensParams 1, GetTex("flare1"), 7.5, 40, RGBA(1, 1, 1, 0.5), RGBA(1, 1, 1, 0.5)
 Atmos.LensFlare_SetLensParams 2, GetTex("flare2"), 3, 18, RGBA(1, 1, 1, 0.5), RGBA(1, 1, 1, 0.5)
@@ -330,7 +342,7 @@ If 设置(0) > 0 Then LE.SetLightProperties 0, True, True, False '灯光开启影子
 '带碰撞检测实体
 For i = 0 To UBound(Mesh): Set Mesh(i) = Scene.CreateMeshBuilder: Next
 Mesh(0).LoadTVM "Map\日本小城\日本小城.tvm", True, True '读取
-Mesh(0).SetScale 1.1, 1.1, 1.1: Mesh(0).SetPosition 0, 0, 0
+Mesh(0).SetScale 1.1, 1.1, 1.1: Mesh(2).SetPosition 0, 0, 0: Mesh(0).SetRotation 0, 0, 0
 
 Mesh(1).LoadTVM "Map\日本小城\城郊.tvm", True, True '读取
 Mesh(1).SetScale 1.1, 1.1, 1.1: Mesh(2).SetPosition 0, 0, 0
@@ -339,8 +351,8 @@ Mesh(2).LoadTVM "Model\ZBD05\ZBD05.tvm", True, True
 With Mesh(2): .SetScale 7.6, 7.6, 7.6: .SetPosition 360, -55, -870: .RotateY -15: End With
 For i = 0 To UBound(Mesh) '光影
 With Mesh(i)
-.SetAlphaTest
-.SetMaterial GetMat("solid")
+.SetAlphaTest True
+.SetMaterial GetMat("map")
 If 设置(0) > 0 Then .SetLightingMode TV_LIGHTING_NORMAL
 End With
 Next
@@ -368,7 +380,7 @@ MeshSin(0).LoadTVM "Map\日本小城\樱花.tvm", True, True '读取
 MeshSin(0).SetScale 1.1, 1.1, 1.1: Mesh(0).SetPosition 0, 0, 0
 For i = 0 To UBound(MeshSin): With MeshSin(i) '光影
   .SetAlphaTest
-  .SetMaterial GetMat("solid")
+  .SetMaterial GetMat("map")
   If 设置(0) > 0 Then .SetLightingMode TV_LIGHTING_NORMAL
 End With: Next
 '=====角色=====
@@ -410,6 +422,7 @@ If 设置(0) > 0 Then .SetLightingMode TV_LIGHTING_NORMAL
 End With
 Next
 '=====特效====
+GF.FadeIn 1000
 '=====参数=====
 Lrc.NormalFont_Create "", "宋体", 25, False, False, False
 初始化视角参数 0, 0, 0, 0, 100
@@ -592,11 +605,11 @@ Tv.Clear '清屏
 Atmos.Fog_Enable False
 Atmos.Atmosphere_Render '渲染大气
 Atmos.Fog_Enable True
+For i = 0 To UBound(Mesh): Mesh(i).Render: Next
+For i = 0 To UBound(MeshSin): MeshSin(i).Render: Next
 For i = 1 To UBound(Enemy): EnemyGun(i).Render: Next
 For i = 1 To UBound(Enemy): Enemy(i).Render: Next
 For i = 0 To UBound(MeshTVA): MeshTVA(i).Render: Next
-For i = 0 To UBound(Mesh): Mesh(i).Render: Next
-For i = 0 To UBound(MeshSin): MeshSin(i).Render: Next
 Scene.FinalizeShadows '渲染影子
 '===============角色事件===============
 For i = 1 To UBound(Enemy)
@@ -651,7 +664,7 @@ End If
 '===============文字渲染===============
 Scr图形.Draw_Sprite GetTex("UI武器属性"), 15, Me.Height / 15 - 135 '武器属性UI
 Select Case PlayerHP(0)
-Case Is > 60: UI字体颜色 = RGBA(0.8, 0.8, 1, 0.6)
+Case Is > 60: UI字体颜色 = RGBA(1, 1, 1, 1)
 Case Is > 30: UI字体颜色 = RGBA(1, 1, 0.5, 0.6)
 Case Else: UI字体颜色 = RGBA(1, 0.5, 0.5, 0.6)
 End Select
@@ -673,8 +686,8 @@ DoEvents
 Loop
 End Sub
 Private Sub Form_Unload(Cancel As Integer)
-LE.DeleteAllLights
-Shell App.Path & "\" & App.EXEName & ".exe", vbNormalFocus
+On Error Resume Next
+Shell App.Path & "\" & App.EXEName & ".exe 0", vbNormalFocus
 End
 End Sub
 Private Sub Tim敌人重生_Timer()
@@ -723,7 +736,7 @@ Case 500
   难度 = 8: Tim敌人重生.Enabled = True
 Case 720: CreatLRC "月军", "呼叫睦月，我们受人类游击队重创正在撤退！", RGBA(1, 0.2, 0.2, 0.8): Tim敌人重生.Enabled = False
 Case 740
-  CreatLRC "月都", "准许。已向SIA请求支援，务必牵制住敌人", RGBA(1, 0.2, 0.2, 0.8)
+  CreatLRC "月都", "准许，正在请求外援", RGBA(1, 0.2, 0.2, 0.8)
   For i = 2 To 8 Step 3: With Enemy(i)
   EnmType(i) = 2
   .LoadTVA ("Player\芙兰\芙兰.tva") '读取模型

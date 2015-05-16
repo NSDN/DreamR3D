@@ -470,7 +470,7 @@ Begin VB.Form Form2设置界面
       AutoSize        =   -1  'True
       BackColor       =   &H00000000&
       BackStyle       =   0  'Transparent
-      Caption         =   "远处贴图"
+      Caption         =   "贴图过滤"
       BeginProperty Font 
          Name            =   "宋体"
          Size            =   10.5
@@ -486,7 +486,7 @@ Begin VB.Form Form2设置界面
       Left            =   960
       TabIndex        =   8
       Tag             =   "开关"
-      ToolTipText     =   "三线型远处会模糊"
+      ToolTipText     =   "三线型(低)远处会模糊，但速度快"
       Top             =   4080
       Width           =   900
    End

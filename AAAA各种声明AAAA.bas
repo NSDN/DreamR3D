@@ -13,13 +13,19 @@ Public Listener As TVListener
 Public LE As New TVLightEngine '添加一个灯光库
 Public GF As New TVGraphicEffect
 Public DofRS As TVRenderSurface
+Public 水面 As TV_PLANE, 水反(1 To 2) As TVRenderSurface
 Public Camera As New TVCamera '定义一个摄像机，相当于人的眼睛
 Public Atmos  As New TVAtmosphere '添加大气系统
 Public Math As New TVMathLibrary '添加tv3d数学运算库
 Public Scr图形 As New TVScreen2DImmediate '2d处理库
 Public Lrc As New TVScreen2DText
 Public Player(0 To 0) As TVActor  '添加主角\队友
+'——水面反射——
+Public ReflectRS As TVRenderSurface '添加反射层
+Public RefractRS As TVRenderSurface '添加折射层
+Public WaterPlane As TV_PLANE '添加水平面
 '——普通变量——
+Public 已阅读说明 As Boolean
 Public 武器名(0 To 9) As String, 武器编号 As Long, 武器状态 As Long '武器状态 -1装备 0静止 1开枪 2装填
 Public 射击间隔 As Long, 武器弹匣(0 To 9) As Long, 武器弹匣数(0 To 9) As Long
 Public 限定射击间隔(0 To 9) As Long, 限定武器弹匣(0 To 9) As Long, 限定武器弹匣数(0 To 9) As Long, 限定武器后坐力(0 To 1) As Single
@@ -44,6 +50,19 @@ Public EnmState(1 To 99) As Long, EnmHP(1 To 99) As Long, EnmT(1 To 99) As Long
 Public 临时(0 To 9) As Long
 Public 开关移动 As Boolean
 '——各种方法——
+Public Floor As TVMesh
+Public Function 建立水面(X1 As Single, Z1 As Single, X2 As Single, Z2 As Single, Height As Single)
+TF.LoadDUDVTexture "Pic\Stage\Water.jpg", "water", -1, -1, 25 '读取水面法线贴图
+Set ReflectRS = Scene.CreateRenderSurfaceEx(-1, -1, TV_TEXTUREFORMAT_DEFAULT, True, True, 1)  '建立反射图层
+Set RefractRS = Scene.CreateRenderSurfaceEx(-1, -1, TV_TEXTUREFORMAT_DEFAULT, True, True, 1) '建立折射图层
+Set Floor = Scene.CreateMeshBuilder
+Floor.AddFloor GetTex("water"), X1, Z1, X2, Z2, Height, 20, 20  '建立水平面
+Floor.SetLightingMode TV_LIGHTING_BUMPMAPPING_TANGENTSPACE '灯光模式设为法线贴图模式
+WaterPlane.Normal = Vector(0, 1, 0) '水面的法线
+WaterPlane.Dist = -0.2 '水面反射高度，为水面高度的负数
+GF.SetWaterReflection Floor, ReflectRS, RefractRS, 0, WaterPlane '初始化，当第三个值设为2时，水面不会有波纹，其他参数没什么用
+GF.SetWaterReflectionBumpAnimation Floor, True, 0.3, 0.3 '水面的波纹速度
+End Function
 Public Function SEplay(文件 As String, 是否临时读取 As Boolean)
 SEchan = 1 + SEchan: If SEchan > 25 Then SEchan = 1
 Set Sounds(SEchan) = Nothing '某些音频似乎会出错
@@ -92,10 +111,10 @@ CameraPozZ = z
 CameraPozXOld = X
 CameraPozYOld = Y
 CameraPozZOld = z
+CameraAngY = 0
 CameraAngX = 方向Y
 PlayerHeight = 17
 PlayerHP(0) = 初始HP
-准星X = Screen.Width \ 30: 准星Y = Screen.Height \ 30
 游戏速度 = 1
 SoundMp3.Load "Weapon\通用\Empty.wav"
 SoundMp3.Load "Audio\SE\掩体着弹0.wav"
