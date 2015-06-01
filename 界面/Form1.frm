@@ -237,7 +237,8 @@ Case 0 '系统未安装楷体字体
   For i = 0 To Lab选项.UBound: Lab选项(i).Font = "宋体": Next
   Lab选项(0).Caption = "已切换宋体字，建议安装完整操作系统"
 Case 1: Unload BG: Unload Me: End
-Case 2: Form2设置界面.Show , vbNormalFocus
+Case 2 '选项设置
+  Form2设置界面.Show , vbNormalFocus
 Case 3 '多语言切换
 If Lab选项(3).Caption = "English" Then
   切换界面语言 1

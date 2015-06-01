@@ -9,6 +9,7 @@ Begin VB.Form BG
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   5445
+   Icon            =   "Form0นุตฦ.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   4710
    ScaleWidth      =   5445

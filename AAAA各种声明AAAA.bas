@@ -61,7 +61,7 @@ Floor.SetLightingMode TV_LIGHTING_BUMPMAPPING_TANGENTSPACE '灯光模式设为法线贴图
 WaterPlane.Normal = Vector(0, 1, 0) '水面的法线
 WaterPlane.Dist = -0.2 '水面反射高度，为水面高度的负数
 GF.SetWaterReflection Floor, ReflectRS, RefractRS, 0, WaterPlane '初始化，当第三个值设为2时，水面不会有波纹，其他参数没什么用
-GF.SetWaterReflectionBumpAnimation Floor, True, 0.3, 0.3 '水面的波纹速度
+GF.SetWaterReflectionBumpAnimation Floor, True, 0.2, 0.2 '水面的波纹速度
 End Function
 Public Function SEplay(文件 As String, 是否临时读取 As Boolean)
 SEchan = 1 + SEchan: If SEchan > 25 Then SEchan = 1
@@ -83,7 +83,7 @@ With Player(0)
 .SetAnimationByName ("draw") '执行的动作名称
 .SetAnimationLoop False '动作不循环
 .PlayAnimation 1.3 * 游戏速度 '播放动作速度
-.SetScale 0.2, 0.2, 0.2 '设定大小
+.SetScale 0.3, 0.3, 0.3 '设定大小
 End With
 
 Open App.Path & "\Weapon\" & 武器名称 & "\属性.ini" For Input As #91

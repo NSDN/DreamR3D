@@ -30,7 +30,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Dim Mesh(0 To 2) As TVMesh: Dim MeshTVA(0 To 3) As TVActor: Dim MeshSin(0 To 0) As TVMesh
+Dim Mesh(0 To 2) As TVMesh: Dim MeshTVA(0 To 4) As TVActor: Dim MeshSin(0 To 0) As TVMesh
 Dim Enemy(1 To 9) As TVActor, EnemyGun(1 To 25) As TVActor, EnmType(1 To 25) As Long, EnmGunFire(1 To 25) As Long
 Dim EnmLastView(1 To 25) As TV_3DVECTOR
 Dim 角色位置(0 To 3) As TV_3DVECTOR '0玩家12角色3中转
@@ -246,7 +246,7 @@ Case Asc("h") Or Asc("H") '防卡死
   MsgBox "当前位置：" & Player(0).GetPosition.X & "//" & Player(0).GetPosition.Y & "//" & Player(0).GetPosition.z & vbCrLf
   CameraPozY = 物理计算高度(Vector(CameraPozX, CameraPozY, CameraPozZ), 1000, 1000) + PlayerHeight: 视角坐标更新 True '防卡死急救
 Case Asc("f") Or Asc("F")
-  For j = 0 To UBound(MeshTVA)
+  For j = 0 To 3
     If 距离平方(MeshTVA(j).GetPosition, Player(0).GetPosition) < 2500 Then '补给弹药
     武器弹匣数(武器编号) = 限定武器弹匣数(武器编号): SEplay "拉枪栓.wav", True
     End If
@@ -356,7 +356,7 @@ With Mesh(i)
 If 设置(0) > 0 Then .SetLightingMode TV_LIGHTING_NORMAL
 End With
 Next
-'Mesh(1).SetShadowCast True, True '产生影子
+If 设置(0) > 1 And 设置(3) >= 100 Then Mesh(2).SetShadowCast True, True '产生影子
 '带骨骼地图TVA实体
 For i = 0 To UBound(MeshTVA): Set MeshTVA(i) = Scene.CreateActor: Next
 MeshTVA(0).LoadTVA "Model\悍马\悍马.tva", True, True '高坡
@@ -370,6 +370,11 @@ With MeshTVA(2): .SetScale 0.33, 0.33, 0.33: .SetPosition -150, -3, 727: .Rotate
 
 MeshTVA(3).LoadTVA "Model\军用卡车\军用卡车.tva", True, True '路口右
 With MeshTVA(3): .SetScale 0.31, 0.31, 0.31: .SetPosition 220, -3, 595: .RotateY 140: End With
+
+MeshTVA(4).LoadTVA "Model\黑鹰\黑鹰环绕\黑鹰环绕.tva", True, True '黑鹰环绕
+With MeshTVA(4): .SetScale 0.4, 0.4, 0.4: .SetPosition 100, 250, 50:  End With
+MeshTVA(4).SetAnimationID 1: MeshTVA(4).SetAnimationLoop True: MeshTVA(4).PlayAnimation 游戏速度
+
 For i = 0 To UBound(MeshTVA): With MeshTVA(i) '光影
   .SetMaterial GetMat("solid")
   .SetLightingMode TV_LIGHTING_NORMAL
@@ -427,8 +432,9 @@ GF.FadeIn 1000
 Lrc.NormalFont_Create "", "宋体", 25, False, False, False
 初始化视角参数 0, 0, 0, 0, 100
 GunLoad "AKS-74U", 1, True
-GunLoad "M16", 0, True
+GunLoad "QBZ-95", 0, True
 BASSplay "Audio\BGM\闇海リグレット.mp3", 0, 1, Me.hWnd
+BASSplay "Audio\BGS\ChopperHover.mp3", 1, 1, Me.hWnd
 '================================主循环=======================================
 Do
  VoiceT = VoiceT + Tv.TimeElapsed
@@ -543,6 +549,7 @@ Case 1 '===开火===
     GunSE "通用", "Empty.wav", 1
     武器状态 = 0
   Else
+    LE.CreatePointLight Vector(CameraPozX, CameraPozY, CameraPozZ), 1, 1, 0, 80, "MyGunFire" '！！！！！创建枪火光源！！！！！
     GunSE 武器名(武器编号), "shoot.wav", 1
     i = 1
     Do Until InStr(Player(0).GetAnimationName(i), "shoot") > 0
@@ -655,8 +662,10 @@ Case 0
 Case 1
   If 射击间隔 > 限定射击间隔(武器编号) Then
     射击间隔 = 0
+    If LE.IsLightActive(LE.GetLightFromName("MyGunFire")) Then LE.DeleteLight LE.GetLightFromName("MyGunFire") '！！！！！删除枪火光源！！！！！
     If B1 = False Then 武器状态 = 0: 执行动作 0, 0, "idle1", 游戏速度, False
   End If
+  If 射击间隔 > 70 And LE.IsLightActive(LE.GetLightFromName("MyGunFire")) Then LE.DeleteLight LE.GetLightFromName("MyGunFire") '！！！！！删除枪火光源！！！！！
   Scr图形.Draw_Line 准星X - 120, 准星Y, 准星X - 70, 准星Y, RGBA(0, 0.8, 0, 2)
   Scr图形.Draw_Line 准星X + 120, 准星Y, 准星X + 70, 准星Y, RGBA(0, 0.8, 0, 2)
 End Select
@@ -723,6 +732,7 @@ Case 60: 难度 = 3 + 难度
 Case 240: CreatLRC "月都", "这里是睦月一号，全军集中围剿游击队", RGBA(1, 0.2, 0.2, 0.8)
 Case 480: CreatLRC "月军", "呼叫睦月，重甲小队接近敌人", RGBA(1, 0.2, 0.2, 0.8):  Tim敌人重生.Enabled = False
 Case 500
+  BG.BGM(9).url = App.Path & "\Audio\SE\敌广播1.wav"
   For i = 1 To 7 Step 3: With Enemy(i)
   EnmType(i) = 1
   .LoadTVA ("Player\重甲\重甲.tva") '读取模型
@@ -734,9 +744,10 @@ Case 500
   EnmHP(i) = 难度 * 20
   End With: Next
   难度 = 8: Tim敌人重生.Enabled = True
+Case 523: BASSplay "Audio\BGM\300英雄.mp3", 0, 1, Me.hWnd
 Case 720: CreatLRC "月军", "呼叫睦月，我们受人类游击队重创正在撤退！", RGBA(1, 0.2, 0.2, 0.8): Tim敌人重生.Enabled = False
 Case 740
-  CreatLRC "月都", "准许，正在请求外援", RGBA(1, 0.2, 0.2, 0.8)
+  CreatLRC "月都", "准许。附近外籍兵团正在前往支援", RGBA(1, 0.2, 0.2, 0.8)
   For i = 2 To 8 Step 3: With Enemy(i)
   EnmType(i) = 2
   .LoadTVA ("Player\芙兰\芙兰.tva") '读取模型

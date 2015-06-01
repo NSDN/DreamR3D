@@ -413,23 +413,25 @@ If 设置(0) > 0 Then .SetLightingMode TV_LIGHTING_NORMAL
 End With
 Next
 '=====特效====
-Set tPart0 = Scene.CreateParticleSystem '粒子
-tPart0.Load "Part\火焰1\火焰1.tvp"
-tPart0.SetGlobalPosition Mesh(1).GetPosition.X, Mesh(1).GetPosition.Y, Mesh(1).GetPosition.z
-tPart0.SetGlobalScale 2, 2, 2
-Set tPart0 = Scene.CreateParticleSystem '粒子
-tPart1.Load "Part\烟雾1\烟雾1.tvp"
-tPart1.SetGlobalPosition Mesh(1).GetPosition.X, Mesh(1).GetPosition.Y, Mesh(1).GetPosition.z
-tPart1.SetGlobalScale 2, 2, 2
+建立水面 800, 1650, 2000, 2000, 72
+If 设置(3) >= 50 Then
+Set tPart = Scene.CreateParticleSystem '粒子
+tPart.Load "Part\火焰1\火焰1.tvp"
+tPart.SetGlobalPosition MeshTVA(2).GetPosition.X, MeshTVA(2).GetPosition.Y, MeshTVA(2).GetPosition.z
+tPart.SetGlobalScale 0.05, 0.05, 0.05
+Set tPart = Scene.CreateParticleSystem '粒子
+tPart.Load "Part\烟雾1\烟雾1.tvp"
+tPart.SetGlobalPosition MeshTVA(1).GetPosition.X - 1, MeshTVA(1).GetPosition.Y - 3, MeshTVA(1).GetPosition.z - 4
+tPart.SetGlobalScale 4, 4, 4
+End If
 '=====参数=====
 Lrc.NormalFont_Create "", "宋体", 25, False, False, False
-初始化视角参数 1380, 物理计算高度(Vector(1380, 0, 1711), 999, 999), 1711, 180, 99
+初始化视角参数 1380, 物理计算高度(Vector(1380, 0, 1680), 999, 999), 1680, 180, 99
 PlayerHeight = 2: 游戏速度 = 1
 GunLoad "AKS-74U", 1, True
 GunLoad "M16", 0, True
 BASSplay "Audio\BGM\music_ingame_disaster_and_rescue.mp3", 0, 1, Me.hWnd
 BASSplay "Audio\BGS\Battle-far1.mp3", 1, 1, Me.hWnd
-'BASSplay "Audio\BGS\心跳.ogg", 2, 1, Me.hWnd
 开关隐藏武器 = True
 Do Until 剧情进度 > 0
   Tv.Clear
@@ -485,6 +487,7 @@ For i = 0 To UBound(MeshTVA)
   视角坐标更新 False: GoTo 结束玩家移动
   End If
 Next
+If CameraPozZ > 1680 Then 视角坐标更新 False: GoTo 结束玩家移动
 视角坐标更新 True
 结束玩家移动:
 '===============瞄准射击===============
@@ -579,25 +582,26 @@ For i = 1 To UBound(Enemy): With EnemyGun(i)
   .MoveRelative 0.2, -1.2, 0.17
 End With: Next
 '===============清屏与渲染===============
-Tv.Clear '清屏
 Atmos.Fog_Enable False
+ReflectRS.StartRender '反射部分渲染
+ Atmos.Atmosphere_Render
+ReflectRS.EndRender
+
+RefractRS.StartRender '折射部分渲染
+ Atmos.Atmosphere_Render
+RefractRS.EndRender
+
+Tv.Clear '清屏
 Atmos.Atmosphere_Render '渲染大气
 Atmos.Fog_Enable True
 For i = 1 To UBound(Enemy): EnemyGun(i).Render: Next
 For i = 1 To UBound(Enemy): Enemy(i).Render: Next
 For i = 0 To UBound(MeshTVA): MeshTVA(i).Render: Next
 Scene.RenderAllMeshes
-
-'ReflectRS.StartRender '反射部分渲染
 Mesh(0).Render
-'ReflectRS.EndRender
-
-'RefractRS.StartRender '折射部分渲染
-Mesh(0).Render
-'RefractRS.EndRender
+Floor.Render
 Scene.FinalizeShadows '渲染影子
 Scene.RenderAllParticleSystems
-'Floor.Render
 '===============角色事件===============
 For i = 1 To UBound(Enemy)
 'LE.DeleteLight LE.GetLightFromName("EnmGunFire" & i)
@@ -710,7 +714,7 @@ Case 1: If 调试模式 Then 剧情进度 = 1
 Case 6: SoundMp3.Load "Audio\SE\Type0.wav": CLRC "", "", "", "2XXX年9月18日 法国加莱"
 Case 10: CLRCt(0) = 0
 Case 11: 剧情进度 = 1: If 调试模式 = False Then GF.FadeIn 2000
-Case 14: CreatLRC "W、A、S、D键爬行", "", RGBA(1, 1, 0, 1)
+Case 14: CreatLRC "W、A、S、D键爬行 扶着悍马站起", "", RGBA(1, 1, 0, 1)
 Case 17: CLRC "—策划—", "佐亚_洛克k上尉", "木龙华易", "吃桃的叫天子"
 Case 22: CLRC "—主程序—", "佐亚_洛克k上尉", "           Drzzm32(移植)", ""
 Case 27: CLRC "—美术—", "木龙华易", "佐亚_洛克k上尉", ""

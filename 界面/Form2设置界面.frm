@@ -338,7 +338,7 @@ Begin VB.Form Form2设置界面
    End
    Begin VB.Image 装饰框 
       Height          =   495
-      Index           =   11
+      Index           =   9
       Left            =   8400
       Picture         =   "Form2设置界面.frx":6272B
       Stretch         =   -1  'True
@@ -347,7 +347,7 @@ Begin VB.Form Form2设置界面
    End
    Begin VB.Image 装饰框 
       Height          =   495
-      Index           =   10
+      Index           =   8
       Left            =   8400
       Picture         =   "Form2设置界面.frx":62771
       Stretch         =   -1  'True
@@ -356,7 +356,7 @@ Begin VB.Form Form2设置界面
    End
    Begin VB.Image 装饰框 
       Height          =   495
-      Index           =   9
+      Index           =   7
       Left            =   8400
       Picture         =   "Form2设置界面.frx":627B7
       Stretch         =   -1  'True
@@ -664,7 +664,7 @@ Begin VB.Form Form2设置界面
    End
    Begin VB.Image 装饰框 
       Height          =   495
-      Index           =   8
+      Index           =   6
       Left            =   8400
       Picture         =   "Form2设置界面.frx":62AD5
       Stretch         =   -1  'True
@@ -749,6 +749,7 @@ Tex焦点.Left = Me.Width
 For i = 装饰框.lbound To 装饰框.UBound
   装饰框(i).Picture = LoadPicture(App.Path & "\Pic\System\UI\cmdBG.gif")
 Next
+MsgBox "OK"
 End Sub
 Private Sub Form_KeyPress(KeyAscii As Integer)
 临时输入值 = KeyAscii
